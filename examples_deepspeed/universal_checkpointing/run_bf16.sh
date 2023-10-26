@@ -22,8 +22,8 @@ if [[ $DEBUG_MODE == 1 ]]; then
         LAYERS=4
         HIDDEN=512
         SEQ=512
-        EXIT_INTERVAL=200
-        SIZE_TAG="toy"
+        EXIT_INTERVAL=2
+        SIZE_TAG="toy_dbg"
 else
         HIDDEN=1024
         LAYERS=24
@@ -33,9 +33,9 @@ else
 fi  
 
 # 3D parallelism of training 
-TP=2
-PP=2
-DP=2
+TP=1
+PP=1
+DP=1
 WORLD_SIZE=$((TP*PP*DP))
 GLOBAL_BATCH=16
 MICRO_BATCH=$((GLOBAL_BATCH/WORLD_SIZE))
