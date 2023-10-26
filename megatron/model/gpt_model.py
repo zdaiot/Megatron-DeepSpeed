@@ -35,6 +35,7 @@ try:
 except ImportError:
     DS_UNIVERSAL_CHECKPOINT_INFO = False  
 
+
 def post_language_model_processing(lm_output, labels, logit_weights,
                                    parallel_output,
                                    fp16_lm_cross_entropy):
