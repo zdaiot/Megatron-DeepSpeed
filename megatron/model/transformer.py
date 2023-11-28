@@ -820,7 +820,7 @@ class ParallelAttention(MegatronModule):
                  self.hidden_size_per_attention_head)
             query_layer = query_layer.view(*new_tensor_shape)
 
-            mixed_x_layer = torch.cat((query_layer, mixed_kv_layer), dim=-1)
+            mixed_x_layer = torch.cat((query_layer, mixed_kv_layer), dim=-1).reshape(query_layer.size()[:-1], (-1,))
 
         context_layer = self.compute_attn(mixed_x_layer, 
                                           attention_mask, 
