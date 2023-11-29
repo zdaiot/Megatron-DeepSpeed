@@ -1,6 +1,6 @@
 # Universal Checkpoint examples
 
-This folder contains example scripts that demonstrate how to use Universal Checkpoints to change the number of GPUs when training with ZeRO. With Universal Checkpoints, training can be resumed with a different parallelism degree on any of tensor slicing (TP), pipeline parallelism (PP), and data parallelism (DP). Using universal checkpoints involves the following three steps:
+This folder contains example scripts that demonstrate how to use Universal Checkpoints to change the number of GPUs when training with ZeRO. With Universal Checkpoints, training can be resumed with a different parallelism degree on any of tensor slicing (TP), pipeline parallelism (PP), sequence parallelism (SP) and data parallelism (DP). Using universal checkpoints involves the following three steps:
 
 1. ZeRO-based training run, optionally combining TP and PP, that creates normal ZeRO checkpoints.  
 2. Converting ZeRO checkpoint into the universal format using `ds_to_universal.py` utility of DeepSpeed.
