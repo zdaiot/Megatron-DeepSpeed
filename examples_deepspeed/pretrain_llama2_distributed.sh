@@ -6,7 +6,7 @@ set -ex
 # Change the below configurations here
 BASE_PATH=./tmp
 DS_CONFIG=${BASE_PATH}/deepspeed.json
-DATASET_1="./tmp/data/bookcorpus_train_1m_text_sentence"
+DATASET_1="./tmp/data/oscar-en-10k_text_document"
 DATASET="1 ${DATASET_1}"
 CHECKPOINT_PATH=./tmp
 TOKENIZER_PATH=./tmp/tokenizer.model # offical llama tokenizer.model
@@ -89,7 +89,7 @@ fi
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
 torchrun $DISTRIBUTED_ARGS \
-       pretrain_gpt.py \
+       ../pretrain_gpt.py \
        --tensor-model-parallel-size $TP \
        --pipeline-model-parallel-size $PP \
        --num-layers $NUM_LAYERS \

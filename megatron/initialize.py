@@ -42,7 +42,7 @@ def initialize_megatron(extra_args_provider=None, args_defaults={},
         # Make sure cuda is available.
         assert get_accelerator().is_available(), 'Megatron requires accelerator.'
 
-    # Parse arguments
+    # Parse arguments. 解析参数，获取RANK以及WORLD_SIZE
     args = parse_args(extra_args_provider, ignore_unknown_args)
     # Set input args.
     for key in args_defaults:
@@ -59,17 +59,17 @@ def initialize_megatron(extra_args_provider=None, args_defaults={},
     if args.use_checkpoint_args or args_defaults.get('use_checkpoint_args', False):
         assert args.load is not None, '--use-checkpoints-args requires --load argument'
         load_args_from_checkpoint(args)
-
+    # 对参数进行检查并进行合理性设置，比如说并行度超过了world_size的处理
     validate_args(args)
         
     # set global args, build tokenizer, and set adlr-autoresume,
-    # tensorboard-writer, and timers.
+    # tensorboard-writer, and timers. num_microbatches
     set_global_variables(args)
 
-    # torch.distributed initialization
+    # torch.distributed initialization，MPU是parallel_state的别称
     def finish_mpu_init():
         args = get_args()
-        # Pytorch distributed.
+        # Pytorch distributed. 初始化各个并行进程组
         _initialize_distributed()
         
         # Random seeds for reproducibility.
@@ -245,7 +245,7 @@ def _initialize_distributed():
                     f"which is not compatible with Megatron-LM's sequence parallel. "
                     f"Remove --sequence_parallel to use DeepSpeed's sequence parallel."
                 )
-
+            # 初始化了进程组, 可以看https://www.microsoft.com/en-us/research/blog/deepspeed-extreme-scale-model-training-for-everyone/
             mpu.initialize_model_parallel(args.tensor_model_parallel_size,
                                            args.pipeline_model_parallel_size,
                                            args.ds_sequence_parallel_size,

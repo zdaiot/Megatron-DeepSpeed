@@ -66,6 +66,7 @@ class ConstantNumMicroBatches(NumMicroBatchesCalculator):
             ' times data parallel size ({})'.format(global_batch_size,
                                                     micro_batch_size,
                                                     data_parallel_size)
+        # $M$ 越大，GPU的利用率越高
         self.num_micro_batches = global_batch_size // \
                                  micro_batch_times_data_parallel
         assert self.num_micro_batches >= 1

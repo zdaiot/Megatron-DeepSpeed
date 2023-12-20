@@ -1,7 +1,7 @@
 # Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
 
 """Pretrain GPT"""
-
+from pudb import set_trace
 import torch
 import math
 from functools import partial
@@ -35,7 +35,7 @@ def model_provider(pre_process=True, post_process=True):
     see_memory_usage(f"Before Building Model", force=True)
 
     args = get_args()
-    config = core_transformer_config_from_args(args)
+    config = core_transformer_config_from_args(args)  # 得到模型配置参数
     with deepspeed.zero.Init(sequence_data_parallel_group=mpu.get_sequence_data_parallel_group(),
                              remote_device=None if args.remote_device == 'none' else args.remote_device,
                              config_dict_or_path=args.deepspeed_config,
@@ -346,6 +346,7 @@ def git_ds_info():
 
 
 if __name__ == "__main__":
+    # set_trace()
     git_ds_info()
     pretrain(train_valid_test_datasets_provider,
              model_provider,

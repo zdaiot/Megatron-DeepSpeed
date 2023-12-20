@@ -86,7 +86,7 @@ def set_global_variables(args):
     assert args is not None
 
     _ensure_var_is_not_initialized(_GLOBAL_ARGS, 'args')
-    set_args(args)
+    set_args(args)  # 将 args, type：Namespace 赋值给全局变量 _GLOBAL_ARGS
 
     _build_num_microbatches_calculator(args)
     _ = _build_tokenizer(args)
@@ -156,7 +156,7 @@ def _set_adlr_autoresume(args):
     """Initialize ADLR autoresume."""
     global _GLOBAL_ADLR_AUTORESUME
     _ensure_var_is_not_initialized(_GLOBAL_ADLR_AUTORESUME, 'adlr autoresume')
-
+    # adlr是nvidia内部开发megatron的team的名字
     if args.adlr_autoresume:
         if args.rank == 0:
             print('enabling autoresume ...', flush=True)

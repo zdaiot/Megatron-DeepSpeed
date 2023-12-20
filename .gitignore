@@ -21,3 +21,8 @@ logs
 
 # Data folder
 bookcorpus_data/
+examples_deepspeed/rebase/data/
+examples_deepspeed/rebase/output/
+examples_deepspeed/tmp/
+examples_deepspeed/rebase/*.json
+output/*

@@ -55,22 +55,25 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
     if ignore_unknown_args:
         args, _ = parser.parse_known_args()
     else:
+        # 检查命令行，把每个参数转换为适当的类型然后调用相应的操作, sys.argv可以查看参数
         args = parser.parse_args()
 
-    # Args from environment
-    args.rank = int(os.getenv('RANK', '0'))
-    args.world_size = int(os.getenv("WORLD_SIZE", '1'))
+    # Args from environment, os.environ查看环境变量
+    args.rank = int(os.getenv('RANK', '0'))  # rank是指在整个分布式任务中进程的序号；local_rank是指在一台机器上(一个node上)进程的相对序号
+    args.world_size = int(os.getenv("WORLD_SIZE", '1'))  # 全局的并行数
 
     return args
 
 def validate_args(args):
-    # Tensor model parallel size.
+    # 这里对数据并行度 pipeline_model_parallel_size、tensor_model_parallel_size、ds_sequence_parallel_size；数据并行度data_parallel_size做了检查。
+    # 即使设置了超过了 world_size 的值，这里也会比较取最小值。
+    # Tensor model parallel size. tensor_model_parallel_size 的计算
     args.tensor_model_parallel_size = min(
         args.tensor_model_parallel_size, args.world_size)
     assert args.world_size % args.tensor_model_parallel_size == 0, 'world size'\
         ' ({}) is not divisible by tensor model parallel size ({})'.format(
             args.world_size, args.tensor_model_parallel_size)
-    # Pipeline model parallel size.
+    # Pipeline model parallel size. pipeline_model_parallel_size、world_size、tensor_model_parallel_size之间的关系
     args.pipeline_model_parallel_size = min(
         args.pipeline_model_parallel_size,
         (args.world_size // args.tensor_model_parallel_size))
@@ -83,10 +86,10 @@ def validate_args(args):
     if args.no_pipeline_parallel:
         assert args.pipeline_model_parallel_size == 1, \
             "pipeline_model_parallel_size must be 1 if pipeline parallel is disabled"
-        
+    # 训练更长的模型，https://cloud.tencent.com/developer/article/1922766
     if args.ds_sequence_parallel_size > 1:
         assert version.parse(deepspeed.__version__) >= version.parse("0.10.2"), "sequence parallelism requires DeepSpeed version 0.10.2+"
-
+    # 模型并行度，包括了 pipeline_model_parallel_size、tensor_model_parallel_size、ds_sequence_parallel_size 三种情况
     model_parallel_size = args.pipeline_model_parallel_size * \
                           args.tensor_model_parallel_size * \
                           args.ds_sequence_parallel_size
@@ -94,6 +97,7 @@ def validate_args(args):
         ' divisible by tensor parallel size ({}) times pipeline parallel ' \
         'size ({})'.format(args.world_size, args.tensor_model_parallel_size,
                            args.pipeline_model_parallel_size)
+    # 数据并行度
     args.data_parallel_size = args.world_size // model_parallel_size
     if args.rank == 0:
         print('using world size: {}, data-parallel-size: {}, '
@@ -105,6 +109,7 @@ def validate_args(args):
                   args.tensor_model_parallel_size,
                   args.pipeline_model_parallel_size), flush=True)
     if args.pipeline_model_parallel_size > 1:
+        # pipeline_model_parallel_split_rank = num_ranks_in_encoder，即当前的pipeline group中的gpu，分几个给encoder layers，剩下的都是给decoder layers了。
         if args.pipeline_model_parallel_split_rank is not None:
             assert args.pipeline_model_parallel_split_rank < \
                     args.pipeline_model_parallel_size, 'split rank needs'\
@@ -136,9 +141,10 @@ def validate_args(args):
     del args.recompute_activations
 
     args.ds_pipeline_enabled = not args.no_pipeline_parallel
-    # Batch size.
+    # Batch size. 计算global_batch_size
     assert args.micro_batch_size is not None
     assert args.micro_batch_size > 0
+    # 若没有指定global_batch_size，则采用 micro_batch_size 以及 data_parallel_size 相乘得到。TODO，若是指定了呢？
     if args.global_batch_size is None:
         args.global_batch_size = args.micro_batch_size * args.data_parallel_size
         if args.rank == 0:
@@ -158,8 +164,9 @@ def validate_args(args):
     else:
         args.virtual_pipeline_model_parallel_size = None
 
-    # Parameters dtype.
+    # Parameters dtype. fp16或者bf16
     args.params_dtype = torch.float
+    # TODO, fp16 不需要么设置 fp32么
     if args.fp16:
         assert not args.bf16
         args.params_dtype = torch.half

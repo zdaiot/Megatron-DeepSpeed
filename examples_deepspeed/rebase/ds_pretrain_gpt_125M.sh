@@ -143,7 +143,8 @@ no_pp="false"
 zero_stage=1
 
 ## Total number of GPUs. ds_ssh is from DeepSpeed library.
-num_gpus=$(($(ds_ssh nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)-2))
+# num_gpus=$(($(ds_ssh nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)-2))
+num_gpus=8
 num_gpus_pernode=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 num_node=$(( ${num_gpus} / ${num_gpus_pernode} ))
 
@@ -182,22 +183,26 @@ host="${HOSTNAME}"
 seed=1234
 num_workers=0
 
-data_path="BookCorpusDataset_text_document"
-if [ ! -f "BookCorpusDataset_text_document.bin" ]; then
-    wget https://the-eye.eu/public/AI/pile_neox/data/BookCorpusDataset_text_document.bin
-fi
-if [ ! -f "BookCorpusDataset_text_document.idx" ]; then
-    wget https://the-eye.eu/public/AI/pile_neox/data/BookCorpusDataset_text_document.idx
-fi
+# data_path="BookCorpusDataset_text_document"
+# if [ ! -f "BookCorpusDataset_text_document.bin" ]; then
+#     wget https://the-eye.eu/public/AI/pile_neox/data/BookCorpusDataset_text_document.bin
+# fi
+# if [ ! -f "BookCorpusDataset_text_document.idx" ]; then
+#     wget https://the-eye.eu/public/AI/pile_neox/data/BookCorpusDataset_text_document.idx
+# fi
 
-vocab_path="gpt2-vocab.json"
-if [ ! -f "$vocab_path" ]; then
-    wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-vocab.json
-fi
-merge_path="gpt2-merges.txt"
-if [ ! -f "$merge_path" ]; then
-    wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt
-fi
+# vocab_path="gpt2-vocab.json"
+# if [ ! -f "$vocab_path" ]; then
+#     wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-vocab.json
+# fi
+# merge_path="gpt2-merges.txt"
+# if [ ! -f "$merge_path" ]; then
+#     wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt
+# fi
+
+data_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/oscar-en-10k_text_document"
+vocab_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/gpt2-vocab.json"
+merge_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/gpt2-merges.txt"
 
 prescale_grad="true"
 jobname="gpt_${model_size}B_tok${train_tokens_in_billion}B"
@@ -328,4 +333,5 @@ if [[ $iteration -gt 0 ]]; then
     ds_ssh "echo $iteration_2 > $iteration_file_2"
 fi
 
-deepspeed ${dir}/../../pretrain_gpt.py ${megatron_options} ${data_options} ${deepspeed_options} &>> ${log_path}/${jobname}_${host}_${current_time}.log
+# deepspeed ${dir}/../../pretrain_gpt.py ${megatron_options} ${data_options} ${deepspeed_options} &>> ${log_path}/${jobname}_${host}_${current_time}.log
+deepspeed ${dir}/../../pretrain_gpt.py ${megatron_options} ${data_options} ${deepspeed_options}
