@@ -200,9 +200,9 @@ num_workers=0
 #     wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt
 # fi
 
-data_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/oscar-en-10k_text_document"
-vocab_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/gpt2-vocab.json"
-merge_path="/mnt/private_zhaodali_cq/llm_install/Megatron-DeepSpeed-Microsoft/examples_deepspeed/rebase/data/gpt2-merges.txt"
+data_path="data/oscar-en-10k_text_document"
+vocab_path="data/gpt2-vocab.json"
+merge_path="data/gpt2-merges.txt"
 
 prescale_grad="true"
 jobname="gpt_${model_size}B_tok${train_tokens_in_billion}B"

@@ -200,8 +200,8 @@ def setup_deepspeed_random_and_activation_checkpointing(args):
 def _initialize_distributed():
     """Initialize torch.distributed and core model parallel."""
     args = get_args()
-    device_count = get_accelerator().device_count()
-    if torch.distributed.is_initialized():
+    device_count = get_accelerator().device_count()  # 应该返回的是单机上的卡个数
+    if torch.distributed.is_initialized():  # 通常在torch.distributed.init_process_group函数之后返回True
 
         if args.rank == 0:
             print('torch distributed is already initialized, '
@@ -220,7 +220,7 @@ def _initialize_distributed():
                     'expected local-rank to be the same as rank % device-count.'
             else:
                 args.local_rank = device
-
+            # 用于设置当前设备的设备索引或设备标识符，这里赋值的局部local_rank值
             get_accelerator().set_device(device) # only do so when device_count > 0
 
     # Call the init process

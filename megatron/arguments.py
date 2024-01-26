@@ -144,7 +144,8 @@ def validate_args(args):
     # Batch size. 计算global_batch_size
     assert args.micro_batch_size is not None
     assert args.micro_batch_size > 0
-    # 若没有指定global_batch_size，则采用 micro_batch_size 以及 data_parallel_size 相乘得到。TODO，若是指定了呢？
+    # 若没有指定global_batch_size，则采用 micro_batch_size 以及 data_parallel_size 相乘得到。
+    # 若是指定了global_batch_size，则会除以 micro_batch_size * data_parallel_size 得到 num_micro_batches
     if args.global_batch_size is None:
         args.global_batch_size = args.micro_batch_size * args.data_parallel_size
         if args.rank == 0:

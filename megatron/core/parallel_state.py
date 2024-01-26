@@ -153,7 +153,7 @@ def initialize_model_parallel(
 
     data_parallel_size: int = world_size // (tensor_model_parallel_size * pipeline_model_parallel_size * sequence_parallel_size)
     sequence_data_parallel_size: int = sequence_parallel_size * data_parallel_size
-
+    # 根据tp、mp、dp大小分别计算各自进程组的个数
     num_tensor_model_parallel_groups: int = world_size // tensor_model_parallel_size
     num_pipeline_model_parallel_groups: int = world_size // pipeline_model_parallel_size
     num_data_parallel_groups: int = world_size // data_parallel_size
@@ -174,7 +174,7 @@ def initialize_model_parallel(
 
     rank = torch.distributed.get_rank()
 
-    # Build the data-parallel groups.
+    # Build the data-parallel groups. 建立模型并行组
     global _DATA_PARALLEL_GROUP
     global _DATA_PARALLEL_GROUP_GLOO
     global _DATA_PARALLEL_GLOBAL_RANKS
@@ -240,7 +240,7 @@ def initialize_model_parallel(
         if rank in ranks:
             _MODEL_PARALLEL_GROUP = group
 
-    # Build the tensor model-parallel groups.
+    # Build the tensor model-parallel groups. 建立TP并行组
     global _TENSOR_MODEL_PARALLEL_GROUP
     assert _TENSOR_MODEL_PARALLEL_GROUP is None, 'tensor model parallel group is already initialized'
     for i in range(num_tensor_model_parallel_groups):
