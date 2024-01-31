@@ -241,6 +241,16 @@ def initialize_model_parallel(
             _MODEL_PARALLEL_GROUP = group
 
     # Build the tensor model-parallel groups. 建立TP并行组
+    """
+    当单机8卡，tensor_model_parallel_size=2, pipeline_model_parallel_size=2, ranks的值依次为
+        range(0, 2)
+        range(2, 4)
+        range(4, 6)
+        range(6, 8)
+    若当前rank在某个ranks中，则将当前进程的全局变量_TENSOR_MODEL_PARALLEL_GROUP设置为该ranks对应的group。
+    也就是说，每个进程都有自己的全局变量_TENSOR_MODEL_PARALLEL_GROUP，若不在同一个进程组内，则变量值不同。
+    比如说rank=0，rank=1，torch.distributed.get_process_group_ranks(_TENSOR_MODEL_PARALLEL_GROUP)==[0, 1]
+    """
     global _TENSOR_MODEL_PARALLEL_GROUP
     assert _TENSOR_MODEL_PARALLEL_GROUP is None, 'tensor model parallel group is already initialized'
     for i in range(num_tensor_model_parallel_groups):
@@ -537,6 +547,7 @@ def get_sequence_data_parallel_rank():
     global _SEQUENCE_DATA_PARALLEL_RANK
     if _SEQUENCE_DATA_PARALLEL_RANK is not None:
         return _SEQUENCE_DATA_PARALLEL_RANK
+    # torch.distributed.get_rank(group=None)是PyTorch分布式包中的一个函数，它的主要作用是获取当前进程在指定进程组中的排名。
     return torch.distributed.get_rank(group=get_sequence_data_parallel_group())
 
 

@@ -338,8 +338,8 @@ def get_model(model_provider_func, model_type=ModelType.encoder_or_decoder, wrap
             this_model.model_type = model_type
             model.append(this_model)
     else:
-        pre_process = mpu.is_pipeline_first_stage()
-        post_process = mpu.is_pipeline_last_stage()
+        pre_process = mpu.is_pipeline_first_stage()  # 比如说rank==0
+        post_process = mpu.is_pipeline_last_stage()  # 比如说(get_pipeline_model_parallel_world_size() - 1)
         add_encoder = True
         add_decoder = True
         if model_type == ModelType.encoder_and_decoder:
@@ -1454,7 +1454,7 @@ def build_train_valid_test_datasets(build_train_valid_test_datasets_provider):
     else:
         train_samples = args.train_iters * args.global_batch_size
     eval_iters = (args.train_iters // args.eval_interval + 1) * \
-                 args.eval_iters
+                 args.eval_iters  # 由此看出, 这里计算的是整个训练过程中的所需样本数
     test_iters = args.eval_iters
     train_val_test_num_samples = [train_samples,
                                   eval_iters * args.global_batch_size,

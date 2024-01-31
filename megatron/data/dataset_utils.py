@@ -629,12 +629,12 @@ def get_train_valid_test_split_(splits_string, size):
     splits = splits[:3]
     splits_sum = sum(splits)
     assert splits_sum > 0.0
-    splits = [split / splits_sum for split in splits]
-    splits_index = [0]
+    splits = [split / splits_sum for split in splits]  # 除以总和转换为比例
+    splits_index = [0]  # 累加结果，size=10000,splits=[0.949, 0.05, 0.001],它=[0, 9490, 9990, 10000]
     for index, split in enumerate(splits):
         splits_index.append(splits_index[index] +
                             int(round(split * float(size))))
-    diff = splits_index[-1] - size
+    diff = splits_index[-1] - size  # 若还有剩余数据或超过了数据，则调整
     for index in range(1, len(splits_index)):
         splits_index[index] -= diff
     assert len(splits_index) == 4

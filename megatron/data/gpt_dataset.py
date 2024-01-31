@@ -323,19 +323,29 @@ def _build_index_mappings(name, data_prefix, documents, sizes,
                           *,
                           data_cache_path):
     """Build doc-idx, sample-idx, and shuffle-idx.
+    name: str, 例如 train
+    data_prefix: str, 数据路径, 例如`examples_deepspeed/rebase/data/oscar-en-10k_text_document`
+    documents: array, name数据集对应的document下标集合, 例如[0,1,2,...,9489]
+    sizes: array, 记录所有document的size大小, 例如[1277,1703,...,1302]
+    splits_string: str, 记录如何划分训练验证测试集的, 这里应该只是打印使用
+    num_samples: int, name数据集对应的样本个数, 例如292968750
+    seq_length: int, 序列长度, 如2048
+    seed: int, 随机种子
+
     doc-idx: is an array (ordered) of documents to be used in training.
     sample-idx: is the start document index and document offset for each
        training sample.
     shuffle-idx: maps the sample index into a random index into sample-idx.
     """
     args = get_args()
-    # Number of tokens in each epoch and number of required epochs.
+    # Number of tokens in each epoch and number of required epochs. sizes记录了各个document的size
     tokens_per_epoch = _num_tokens(documents, sizes)
-    num_epochs = _num_epochs(tokens_per_epoch, seq_length, num_samples)
+    num_epochs = _num_epochs(tokens_per_epoch, seq_length, num_samples) # 约等于num_samples*seq_length/(tokens_per_epoch)
     if args.train_data_exact_num_epochs is not None and name == 'train':
         num_epochs = args.train_data_exact_num_epochs
 
-    # rng state
+    # rng state, 生成一个随机状态对象，这个对象可以用来生成各种随机数。
+    # 不同的RandomState对象之间的随机数生成是相互独立的，这样可以在不同的地方独立地使用随机数，而不会互相影响。
     np_rng = np.random.RandomState(seed=seed)
 
     # Filename of the index mappings.
@@ -381,7 +391,7 @@ def _build_index_mappings(name, data_prefix, documents, sizes,
         for f in idx_path.values():
             if not os.path.isfile(f):
                 break
-        else:
+        else: # else可以与for或while循环配合使用，在这种情况下，else子句在循环正常结束（即没有遇到break语句）时执行。
             # Found our files!
             build_indices = False
             break
@@ -435,7 +445,7 @@ def _build_index_mappings(name, data_prefix, documents, sizes,
         try:
             os.makedirs(data_cache_dir, exist_ok=True)
 
-            # description
+            # description, '\t'是文本模式(默认也会使用)
             with open(idx_path['desc'], 'wt') as fd:
                 fd.write(desc)
 
@@ -480,7 +490,7 @@ def _build_index_mappings(name, data_prefix, documents, sizes,
             data_cache_success = False
 
     counts = get_accelerator().LongTensor([data_cache_success])
-    torch.distributed.all_reduce(counts, group=mpu.get_data_parallel_group())
+    torch.distributed.all_reduce(counts, group=mpu.get_data_parallel_group())  # 在不同的设备组上同步data_cache_success的值
     torch.distributed.all_reduce(counts, group=mpu.get_pipeline_model_parallel_group())
     if counts[0].item() != (
         torch.distributed.get_world_size() //
@@ -533,13 +543,26 @@ def _build_doc_idx(documents, num_epochs, np_rng, separate_last_epoch):
     """Build an array with length = number-of-epochs * number-of-dcuments.
     Each index is mapped to a corresponding document."""
     if not separate_last_epoch or num_epochs == 1:
+        """
+        np.mgrid函数在这里创建了一个二维的网格，其中第一维的范围是从0到num_epochs，第二维的范围是从0到len(documents)。
+        这个函数的返回值是一个shape为(2, num_epochs, len(documents))的数组，其中第一个数组是行坐标，第二个数组是列坐标。
+        所以，doc_idx是一个二维数组，shape为(num_epochs, len(documents))，其中每一行都是从0到len(documents)的序列。
+        这个数组可以用于在进行多个epoch的循环时，每次都按照固定的顺序遍历所有的文档。
+
+        例如，如果num_epochs是2，documents的长度是3，那么doc_idx会是这样的数组：
+        ```
+        [[0, 1, 2],
+        [0, 1, 2]]
+        ```
+        这意味着在第一个epoch，我们会按照顺序访问第0、1、2个文档，在第二个epoch，我们也会按照相同的顺序访问这些文档。
+        """
         doc_idx = np.mgrid[0:num_epochs, 0:len(documents)][1]
-        doc_idx[:] = documents
+        doc_idx[:] = documents  # 将doc_idx的每一行均赋值为documents
         doc_idx = doc_idx.reshape(-1)
         doc_idx = doc_idx.astype(np.int32)
         np_rng.shuffle(doc_idx)
         return doc_idx
-
+    # documents存放的是下标，比如说[0,1,...,9489]
     doc_idx_first = _build_doc_idx(documents, num_epochs-1, np_rng, False)
     doc_idx_last = _build_doc_idx(documents, 1, np_rng, False)
     return np.concatenate((doc_idx_first, doc_idx_last))

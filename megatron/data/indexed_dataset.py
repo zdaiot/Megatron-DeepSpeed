@@ -422,12 +422,19 @@ class MMapIndexedDataset(torch.utils.data.Dataset):
             return _Writer()
 
         def __init__(self, path, skip_warmup=False):
+            """
+            这段代码是在读取一个特定格式的二进制文件，并从中解析出一些信息，包括文件的版本号、数据类型、长度、文档数量等。
+
+            struct.unpack是Python的一个内置函数，它的主要作用是将打包的二进制数据解包成指定的数据类型。数据类型可以参考官方文档
+            https://docs.python.org/zh-cn/3/library/struct.html#format-strings
+            """
             with open(path, 'rb') as stream:
                 magic_test = stream.read(9)
                 assert self._HDR_MAGIC == magic_test, (
                     'Index file doesn\'t match expected format. '
                     'Make sure that --dataset-impl is configured properly.'
                 )
+                # 读取接下来的8个字节，并使用struct.unpack函数将其解包成一个无符号长整型（'<Q'）
                 version = struct.unpack('<Q', stream.read(8))
                 assert (1,) == version
 

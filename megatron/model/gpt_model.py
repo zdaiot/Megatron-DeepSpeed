@@ -327,7 +327,7 @@ class GPTModelPipe(PipelineModule,MegatronModule):
             interval = args.recompute_num_layers
         else:
             interval = 0
-
+        # PipeModelDataParallelTopology类提供了一种方式来描述这种并行结构，包括哪些层在哪些设备上，以及如何在设备之间传递数据。这可以帮助DeepSpeed更有效地管理资源和调度计算任务。
         from deepspeed.runtime.pipe.topology import PipeModelDataParallelTopology
         topo = PipeModelDataParallelTopology(num_pp=mpu.get_pipeline_model_parallel_world_size(),
                                              num_mp=mpu.get_tensor_model_parallel_world_size(),

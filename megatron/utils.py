@@ -47,7 +47,7 @@ def unwrap_model(model, module_instances=(torchDDP)):
         return_list = False
     unwrapped_model = []
     for model_module in model:
-        while isinstance(model_module, module_instances):
+        while isinstance(model_module, module_instances):  # 若model_module是其中的一个类型
             model_module = model_module.module
         unwrapped_model.append(model_module)
     if not return_list:
